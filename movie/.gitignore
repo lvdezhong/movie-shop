@@ -27,5 +27,5 @@ dist-ssr
 .env
 
 # Ignore DB file
-.sql
-.rdb
+*.sql
+*.rdb
