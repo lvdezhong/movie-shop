@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>电影商城系统</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+    <script>
+      window.difyChatbotConfig = {
+        token: 'KM9s4wRKiM0gIfNm',
+        inputs: {
+          // You can define the inputs from the Start node here
+          // key is the variable name
+          // e.g.
+          // name: "NAME"
+        },
+        systemVariables: {
+          // user_id: 'YOU CAN DEFINE USER ID HERE',
+          // conversation_id: 'YOU CAN DEFINE CONVERSATION ID HERE, IT MUST BE A VALID UUID',
+        },
+        userVariables: {
+          // avatar_url: 'YOU CAN DEFINE USER AVATAR URL HERE',
+          // name: 'YOU CAN DEFINE USER NAME HERE',
+        },
+      }
+    </script>
+    <script
+      src="https://udify.app/embed.min.js"
+      id="KM9s4wRKiM0gIfNm"
+      defer
+    ></script>
+    <style>
+      #dify-chatbot-bubble-button {
+        background-color: #1c64f2 !important;
+      }
+      #dify-chatbot-bubble-window {
+        width: 24rem !important;
+        height: 40rem !important;
+      }
+    </style>
+  </body>
+</html>
