@@ -1245,7 +1245,7 @@ router.post('/upload', function (req, res) {
   //上传完成后处理
   form.parse(req, function (err, fields, files) {
     const file = files.file[0]
-    const pathTemp = file.path.split('\\')
+    const pathTemp = file.path.split('/')
     const path = pathTemp[pathTemp.length - 1]
     res.json({
       code: 200,

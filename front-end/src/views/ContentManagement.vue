@@ -27,6 +27,11 @@
         <el-tab-pane label="影片审核" name="movieReview">
           <movie-review />
         </el-tab-pane>
+
+        <!-- 商品管理 -->
+        <el-tab-pane label="商品管理" name="productManagement">
+          <product-management />
+        </el-tab-pane>
       </el-tabs>
     </el-main>
   </el-container>
@@ -34,6 +39,7 @@
 
 <script>
 import MovieManagement from './components/MovieManagement.vue'
+import ProductManagement from './components/ProductManagement.vue'
 import CategoryManagement from './components/CategoryManagement.vue'
 import MovieReview from './components/MovieReview.vue'
 import api from '@/utils/api'
@@ -42,6 +48,7 @@ export default {
   components: {
     MovieManagement,
     CategoryManagement,
+    ProductManagement,
     MovieReview,
   },
   data() {
