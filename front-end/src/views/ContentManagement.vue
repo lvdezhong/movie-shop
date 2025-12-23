@@ -1,109 +1,118 @@
 <template>
   <el-container>
     <el-main>
-      <el-card>
-        <el-tabs v-model="activeTab" @tab-click="handleTabClick">
-          <!-- 影片管理 -->
-          <el-tab-pane label="影片管理" name="movieManagement">
-            <movie-management ref="movieManagement" :categories="categories" @refresh-movies="getMovies" />
-          </el-tab-pane>
+      <el-tabs
+        v-model="activeTab"
+        @tab-click="handleTabClick"
+        tab-position="left"
+      >
+        <!-- 影片管理 -->
+        <el-tab-pane label="影片管理" name="movieManagement">
+          <movie-management
+            ref="movieManagement"
+            :categories="categories"
+            @refresh-movies="getMovies"
+          />
+        </el-tab-pane>
 
-          <!-- 分类管理 -->
-          <el-tab-pane label="分类管理" name="categoryManagement">
-            <category-management :categories="categories" @refresh-categories="getCategories" />
-          </el-tab-pane>
+        <!-- 分类管理 -->
+        <el-tab-pane label="分类管理" name="categoryManagement">
+          <category-management
+            :categories="categories"
+            @refresh-categories="getCategories"
+          />
+        </el-tab-pane>
 
-          <!-- 影片审核 -->
-          <el-tab-pane label="影片审核" name="movieReview">
-            <movie-review />
-          </el-tab-pane>
-        </el-tabs>
-      </el-card>
+        <!-- 影片审核 -->
+        <el-tab-pane label="影片审核" name="movieReview">
+          <movie-review />
+        </el-tab-pane>
+      </el-tabs>
     </el-main>
   </el-container>
 </template>
 
 <script>
-import MovieManagement from './components/MovieManagement.vue';
-import CategoryManagement from './components/CategoryManagement.vue';
-import MovieReview from './components/MovieReview.vue';
-import api from '@/utils/api';
+import MovieManagement from './components/MovieManagement.vue'
+import CategoryManagement from './components/CategoryManagement.vue'
+import MovieReview from './components/MovieReview.vue'
+import api from '@/utils/api'
 
 export default {
   components: {
     MovieManagement,
     CategoryManagement,
-    MovieReview
+    MovieReview,
   },
   data() {
     return {
       activeTab: 'movieManagement',
-      categories: []
+      categories: [],
     }
   },
   created() {
-    this.getCategories();
-    this.getMovies();
+    this.getCategories()
+    this.getMovies()
   },
   methods: {
     async getCategories() {
       try {
-        const response = await api.get('/type/list');
-        console.log(response);
-        this.categories = response.result;
+        const response = await api.get('/type/list')
+        console.log(response)
+        this.categories = response.result
       } catch (error) {
-        console.error('获取分类列表失败:', error);
-        this.$message.error('获取分类列表失败');
+        console.error('获取分类列表失败:', error)
+        this.$message.error('获取分类列表失败')
       }
     },
     async getMovies() {
       try {
-        const response = await api.get('/movie/list');
-        this.$refs.movieManagement.movies = response.result;
+        const response = await api.get('/movie/list')
+        this.$refs.movieManagement.movies = response.result
       } catch (error) {
-        console.error('获取影片列表失败:', error);
-        this.$message.error('获取影片列表失败');
+        console.error('获取影片列表失败:', error)
+        this.$message.error('获取影片列表失败')
       }
     },
     async handleTabClick(tab) {
       switch (tab.name) {
         case 'movieManagement':
-          this.getCategories();
+          this.getCategories()
           this.getMovies()
-          break;
+          break
         case 'movieReview':
           // 获取待审核评论列表
           try {
             // const response = await api.get('/review/pending');
             // this.$refs.movieReview.reviews = response.data;
           } catch (error) {
-            console.error('获取待审核评论失败:', error);
-            this.$message.error('获取待审核评论失败');
+            console.error('获取待审核评论失败:', error)
+            this.$message.error('获取待审核评论失败')
           }
-          break;
+          break
         case 'categoryManagement':
           // 获取分类列表
           try {
-            const response = await api.get('/type/list');
-            this.categories = response.result;
+            const response = await api.get('/type/list')
+            this.categories = response.result
           } catch (error) {
-            console.error('获取分类列表失败:', error);
-            this.$message.error('获取分类列表失败');
+            console.error('获取分类列表失败:', error)
+            this.$message.error('获取分类列表失败')
           }
-          break;
-        
+          break
       }
-    }
-  }
+    },
+  },
 }
 </script>
 
 <style scoped>
 .el-main {
   padding: 20px;
+  padding-left: 0;
 }
 
-.el-card {
-  min-height: 500px;
+:deep(.el-tabs__header.is-left) {
+  margin-right: 20px !important;
 }
-</style> 
+</style>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-row type="flex" justify="space-between" class="mb-20">
+    <el-row type="flex" justify="end" class="mb-20">
       <el-input
         placeholder="搜索评论内容"
         v-model="commentsContent"
@@ -8,16 +8,40 @@
         clearable
         @clear="handleSearch"
       >
-        <el-button slot="append" icon="el-icon-search" @click="handleSearch"></el-button>
+        <el-button
+          slot="append"
+          icon="el-icon-search"
+          @click="handleSearch"
+        ></el-button>
       </el-input>
     </el-row>
 
     <el-table :data="reviews" v-loading="loading">
-      <el-table-column prop="commentsId" label="ID" width="80"></el-table-column>
-      <el-table-column prop="movieName" label="电影名称" width="180"></el-table-column>
-      <el-table-column prop="userName" label="用户名" width="120"></el-table-column>
-      <el-table-column prop="commentsContent" label="评论内容" show-overflow-tooltip></el-table-column>
-      <el-table-column prop="commentsTime" label="评论时间" width="180"></el-table-column>
+      <el-table-column
+        prop="commentsId"
+        label="ID"
+        width="80"
+      ></el-table-column>
+      <el-table-column
+        prop="movieName"
+        label="电影名称"
+        width="180"
+      ></el-table-column>
+      <el-table-column
+        prop="userName"
+        label="用户名"
+        width="120"
+      ></el-table-column>
+      <el-table-column
+        prop="commentsContent"
+        label="评论内容"
+        show-overflow-tooltip
+      ></el-table-column>
+      <el-table-column
+        prop="commentsTime"
+        label="评论时间"
+        width="180"
+      ></el-table-column>
       <el-table-column prop="state" label="状态" width="100">
         <template slot-scope="scope">
           <el-tag :type="getStatusType(scope.row.state)">
@@ -94,7 +118,7 @@
 </template>
 
 <script>
-import api from '@/utils/api';
+import api from '@/utils/api'
 export default {
   name: 'MovieReview',
   data() {
@@ -109,9 +133,9 @@ export default {
         content: '',
         rating: 0,
         createTime: '',
-        status: ''
+        status: '',
       },
-      reviews: []
+      reviews: [],
     }
   },
   mounted() {
@@ -121,8 +145,10 @@ export default {
   methods: {
     async fetchComments(data) {
       try {
-        const response = await api.get('/movie_comments/listAll?commentsContent=' + this.commentsContent)
-        if(response.code === 200){
+        const response = await api.get(
+          '/movie_comments/listAll?commentsContent=' + this.commentsContent
+        )
+        if (response.code === 200) {
           this.reviews = response.result
         }
         // this.comments = response
@@ -132,88 +158,94 @@ export default {
     },
     handleSearch() {
       // 搜索功能已通过计算属性实现
-      this.fetchComments({commentsContent: this.commentsContent})
+      this.fetchComments({ commentsContent: this.commentsContent })
     },
     openEditDialog(review) {
-      this.reviewForm = { ...review };
-      this.dialogVisible = true;
+      this.reviewForm = { ...review }
+      this.dialogVisible = true
     },
     submitReview() {
-      const index = this.reviews.findIndex(r => r.id === this.reviewForm.id);
+      const index = this.reviews.findIndex((r) => r.id === this.reviewForm.id)
       if (index !== -1) {
-        this.reviews[index] = { ...this.reviewForm };
-        this.$message.success('评论更新成功');
+        this.reviews[index] = { ...this.reviewForm }
+        this.$message.success('评论更新成功')
       }
-      this.dialogVisible = false;
+      this.dialogVisible = false
     },
     deleteReview(id) {
       this.$confirm('确认删除该评论吗？删除后无法恢复！', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
-      }).then(async() => {
-        const response = await api.post('/movie_comments/delete', {
-          commentsId: id
+        type: 'warning',
+      })
+        .then(async () => {
+          const response = await api.post('/movie_comments/delete', {
+            commentsId: id,
+          })
+          if (response.code === 200) {
+            this.$message.success('成功')
+
+            this.fetchComments()
+          } else {
+            this.$message.error('失败')
+          }
         })
-        if (response.code === 200) {
-          this.$message.success('成功')
-          
-          this.fetchComments()
-        } else {
-          this.$message.error('失败')
-        }
-      }).catch(() => {
-        this.$message.info('已取消删除');
-      });
+        .catch(() => {
+          this.$message.info('已取消删除')
+        })
     },
     getStatusType(status) {
       switch (status) {
         case '2':
-          return 'success';
+          return 'success'
         case '1':
-          return 'warning';
+          return 'warning'
         case '3':
-          return 'danger';
+          return 'danger'
         default:
-          return 'info';
+          return 'info'
       }
     },
     approveReview(review) {
       this.$confirm('确认通过该评论吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'success'
-      }).then(async() => {
-        this.updateState(review.commentsId, 2)
-      }).catch(() => {
-        this.$message.info('已取消操作');
-      });
+        type: 'success',
+      })
+        .then(async () => {
+          this.updateState(review.commentsId, 2)
+        })
+        .catch(() => {
+          this.$message.info('已取消操作')
+        })
     },
     rejectReview(review) {
       this.$confirm('确认拒绝该评论吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.updateState(review.commentsId, 3)
-      }).catch(() => {
-        this.$message.info('已取消操作');
-      });
+        type: 'warning',
+      })
+        .then(() => {
+          this.updateState(review.commentsId, 3)
+        })
+        .catch(() => {
+          this.$message.info('已取消操作')
+        })
     },
     async updateState(id, state) {
       const response = await api.post('/movie_comments/updateState', {
-          commentsId: id,
-          state: state
-        })
-        if (response.code === 200) {
-          this.$message.success('成功')
-          
-          this.fetchComments()
-        } else {
-          this.$message.error('失败')
-        }
-    }
-  }
+        commentsId: id,
+        state: state,
+      })
+      if (response.code === 200) {
+        this.$message.success('成功')
+
+        this.fetchComments()
+      } else {
+        this.$message.error('失败')
+      }
+    },
+  },
 }
 </script>
 
@@ -237,4 +269,4 @@ export default {
 .el-rate {
   margin-top: 8px;
 }
-</style> 
+</style>

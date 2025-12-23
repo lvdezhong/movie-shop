@@ -1,20 +1,28 @@
 <template>
   <div>
-    <el-row type="flex" justify="space-between" class="mb-20">
-      <el-button type="primary" icon="el-icon-plus" @click="openAddDialog">添加影片</el-button>
+    <el-row type="flex" justify="end" class="mb-20">
+      <el-button type="primary" icon="el-icon-plus" @click="openAddDialog"
+        >添加影片</el-button
+      >
     </el-row>
 
     <el-table :data="movies" v-loading="loading">
       <el-table-column prop="movieName" label="影片名称"></el-table-column>
-      <el-table-column label="电影">
+      <el-table-column label="分类">
         <template slot-scope="scope">
-          <el-tag
-           v-if="scope.row.typeId"
-            type="primary"
-            class="mr-5"
-          >
+          <el-tag v-if="scope.row.typeId" type="primary" class="mr-5">
             {{ getTypeName(scope.row.typeId) }}
           </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="导演">
+        <template slot-scope="scope">
+          {{ scope.row.director }}
+        </template>
+      </el-table-column>
+      <el-table-column label="年份">
+        <template slot-scope="scope">
+          {{ scope.row.year }}
         </template>
       </el-table-column>
       <el-table-column label="操作" width="150">
@@ -104,8 +112,12 @@
             :on-success="handleSuccess"
           >
             <i class="el-icon-upload"></i>
-            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-            <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过2MB</div>
+            <div class="el-upload__text">
+              将文件拖到此处，或<em>点击上传</em>
+            </div>
+            <div class="el-upload__tip" slot="tip">
+              只能上传jpg/png文件，且不超过2MB
+            </div>
           </el-upload>
         </el-form-item>
       </el-form>
@@ -118,12 +130,12 @@
 </template>
 
 <script>
-import api from '@/utils/api';
+import api from '@/utils/api'
 export default {
   props: {
     categories: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
   },
   data() {
@@ -138,14 +150,14 @@ export default {
         starring: '',
         year: '',
         remark: '',
-        imgUrl: ''
+        imgUrl: '',
       },
-      movies:[]
+      movies: [],
     }
   },
   methods: {
     openAddDialog() {
-      this.isEditing = false;
+      this.isEditing = false
       this.movieForm = {
         typeId: '',
         movieName: '',
@@ -153,80 +165,90 @@ export default {
         starring: '',
         year: '',
         remark: '',
-        imgUrl: ''
-      };
-      this.dialogVisible = true;
+        imgUrl: '',
+      }
+      this.dialogVisible = true
     },
     setToken() {
-      return {Authorization: 'Bearer ' + localStorage.getItem('token')|| ''}
+      return { Authorization: 'Bearer ' + localStorage.getItem('token') || '' }
     },
     openEditDialog(movie) {
-      this.isEditing = true;
-      this.movieForm = { ...movie };
-      this.dialogVisible = true;
+      this.isEditing = true
+      this.movieForm = { ...movie }
+      this.dialogVisible = true
     },
     getTypeName(typeId) {
-      const category = this.categories.find(c => c.typeId === typeId);
-      return category ? category.typeName : '';
+      const category = this.categories.find((c) => c.typeId === typeId)
+      return category ? category.typeName : ''
     },
     handleSuccess(response) {
-      this.movieForm.imgUrl = response.result.path;
+      this.movieForm.imgUrl = response.result.path
     },
     submitMovie() {
       if (this.isEditing) {
         // 编辑现有电影
-        api.post('/movie/update', this.movieForm).then(() => {
-          this.$message.success('电影更新成功');
-          this.$emit('refresh-movies');
-        }).catch(error => {
-          console.error('更新电影失败:', error);
-          this.$message.error('更新电影失败');
-        });
+        api
+          .post('/movie/update', this.movieForm)
+          .then(() => {
+            this.$message.success('电影更新成功')
+            this.$emit('refresh-movies')
+          })
+          .catch((error) => {
+            console.error('更新电影失败:', error)
+            this.$message.error('更新电影失败')
+          })
       } else {
         // 添加新电影
-        api.post('/movie/add', this.movieForm).then(() => {
-          this.$message.success('电影添加成功');
-          this.$emit('refresh-movies');
-        }).catch(error => {
-          this.$message.error('电影添加失败');
-        });
+        api
+          .post('/movie/add', this.movieForm)
+          .then(() => {
+            this.$message.success('电影添加成功')
+            this.$emit('refresh-movies')
+          })
+          .catch((error) => {
+            this.$message.error('电影添加失败')
+          })
       }
-      this.dialogVisible = false;
+      this.dialogVisible = false
     },
     deleteMovie(movieId) {
       this.$confirm('确认删除该电影吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-       api.post(`/movie/delete`, { movieId }).then(() => {
-          this.$message.success('删除成功');
-          this.$emit('refresh-movies');
-        }).catch(error => {
-          this.$message.error('删除电影失败');
-        });
-      }).catch(() => {
-      });
+        type: 'warning',
+      })
+        .then(() => {
+          api
+            .post(`/movie/delete`, { movieId })
+            .then(() => {
+              this.$message.success('删除成功')
+              this.$emit('refresh-movies')
+            })
+            .catch((error) => {
+              this.$message.error('删除电影失败')
+            })
+        })
+        .catch(() => {})
     },
     handleExceed(files, fileList) {
-      this.$message.warning('只能上传一个文件');
+      this.$message.warning('只能上传一个文件')
     },
     beforeUpload(file) {
-      const isJPG = file.type === 'image/jpeg';
-      const isPNG = file.type === 'image/png';
-      const isLt500K = file.size / 1024 / 1024 < 2;
+      const isJPG = file.type === 'image/jpeg'
+      const isPNG = file.type === 'image/png'
+      const isLt500K = file.size / 1024 / 1024 < 2
 
       if (!isJPG && !isPNG) {
-        this.$message.error('只能上传 JPG/PNG 格式的图片！');
-        return false;
+        this.$message.error('只能上传 JPG/PNG 格式的图片！')
+        return false
       }
       if (!isLt500K) {
-        this.$message.error('图片大小不能超过 2MB！');
-        return false;
+        this.$message.error('图片大小不能超过 2MB！')
+        return false
       }
-      return true;
-    }
-  }
+      return true
+    },
+  },
 }
 </script>
 
@@ -249,11 +271,11 @@ export default {
   .el-form-item {
     margin-bottom: 22px;
   }
-  
+
   .el-upload {
     width: 100%;
   }
-  
+
   .el-upload-dragger {
     width: 100%;
   }
@@ -264,10 +286,10 @@ export default {
     width: 100%;
     height: 180px;
   }
-  
+
   .el-upload__tip {
     line-height: 1.2;
     padding-top: 8px;
   }
 }
-</style> 
+</style>
