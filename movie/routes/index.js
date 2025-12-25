@@ -1311,23 +1311,6 @@ router.post('/upload', function (req, res) {
   })
 })
 
-router.get('/getFile/:fileName', async function (req, res) {
-  const basePath = __dirname + '/../uploads'
-  let fileName = req.params.fileName
-  let filePath = basePath + '/' + fileName
-  let fs = require('fs')
-  fs.readFile(filePath, 'binary', function (err, file) {
-    console.log(err)
-    res.writeHead(200, {
-      'Content-Type': 'image/png',
-    })
-    res.write(file, 'binary')
-    res.end()
-  })
-
-  // res.sendFile(filePath);
-})
-
 function generateOrderNumber() {
   const now = new Date()
   const year = now.getFullYear()
