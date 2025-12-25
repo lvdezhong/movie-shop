@@ -8,14 +8,24 @@
         prefix-icon="el-icon-search"
         @keyup.enter.native="handleSearch"
       >
-        <el-button slot="append" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+        <el-button slot="append" icon="el-icon-search" @click="handleSearch"
+          >搜索</el-button
+        >
       </el-input>
     </div>
 
     <!-- 轮播图 -->
     <el-carousel :interval="4000" type="card" height="400px" class="banner">
-      <el-carousel-item v-for="item in carouselItems" :key="item.id" @click.native="goToDetail(item.movieId)">
-        <img :src="item.imgUrl" :alt="item.title" class="banner-image">
+      <el-carousel-item
+        v-for="item in carouselItems"
+        :key="item.id"
+        @click.native="goToDetail(item.movieId)"
+      >
+        <img
+          :src="getImageUrl(item.imgUrl)"
+          :alt="item.title"
+          class="banner-image"
+        />
         <div class="banner-content">
           <h2>{{ item.movieName }}</h2>
           <p>{{ item.remark }}</p>
@@ -27,8 +37,8 @@
     <div class="category-nav">
       <el-tabs v-model="activeCategory" @tab-click="handleCategoryClick">
         <el-tab-pane label="全部" name="all"></el-tab-pane>
-        <el-tab-pane 
-          v-for="category in categories" 
+        <el-tab-pane
+          v-for="category in categories"
           :key="category.typeId"
           :label="category.typeName"
           :name="category.typeId.toString()"
@@ -42,8 +52,12 @@
       <template v-if="movies.length > 0">
         <el-row :gutter="20">
           <el-col :span="6" v-for="movie in movies" :key="movie.id">
-            <el-card :body-style="{ padding: '0px' }" class="movie-card" @click.native="goToDetail(movie.movieId)">
-              <img :src="movie.imgUrl" class="movie-image">
+            <el-card
+              :body-style="{ padding: '0px' }"
+              class="movie-card"
+              @click.native="goToDetail(movie.movieId)"
+            >
+              <img :src="getImageUrl(movie.imgUrl)" class="movie-image" />
               <div class="movie-info">
                 <h3>{{ movie.movieName }}</h3>
                 <div class="movie-meta">
@@ -73,6 +87,7 @@
 
 <script>
 import api from '@/utils/api'
+import { getImageUrl } from '@/utils'
 
 export default {
   name: 'Home',
@@ -80,62 +95,62 @@ export default {
     return {
       searchQuery: '',
       activeCategory: 'all',
-      categories: [
-      ],
+      categories: [],
       movies: [],
       allMovies: [],
-      carouselItems: []
+      carouselItems: [],
     }
   },
   created() {
-    this.handleCategoryClick();
-    this.getCategories();
+    this.handleCategoryClick()
+    this.getCategories()
     this.getMovies()
   },
   methods: {
+    getImageUrl,
     handleSearch() {
       this.activeCategory = 'all'
       if (this.searchQuery.trim()) {
-        this.movies = this.allMovies.filter(movie => 
+        this.movies = this.allMovies.filter((movie) =>
           movie.movieName.toLowerCase().includes(this.searchQuery.toLowerCase())
-        );
+        )
       } else {
-        this.handleCategoryClick();
+        this.handleCategoryClick()
       }
     },
     async getCategories() {
       try {
-        const response = await api.get('/type/list');
-        this.categories = response.result;
+        const response = await api.get('/type/list')
+        this.categories = response.result
       } catch (error) {
-        this.$message.error('获取分类列表失败');
+        this.$message.error('获取分类列表失败')
       }
     },
     async getMovies() {
       try {
-        const response = await api.get('/movie/list');
-        this.allMovies = response.result;
-        this.movies = this.allMovies;
-        if(this.allMovies.length > 3) {
-          this.carouselItems = this.allMovies.slice(0, 3);
+        const response = await api.get('/movie/list')
+        this.allMovies = response.result
+        this.movies = this.allMovies
+        if (this.allMovies.length > 3) {
+          this.carouselItems = this.allMovies.slice(0, 3)
         }
       } catch (error) {
-        this.$message.error('获取电影列表失败');
+        this.$message.error('获取电影列表失败')
       }
     },
     handleCategoryClick() {
       if (this.activeCategory === 'all') {
-        this.movies = this.allMovies;
+        this.movies = this.allMovies
       } else {
-        this.movies = this.allMovies.filter(movie => 
-          movie.typeId.toString() == this.activeCategory
-        );
+        this.movies = this.allMovies.filter(
+          (movie) => movie.typeId.toString() == this.activeCategory
+        )
       }
     },
     goToDetail(movieId) {
-      this.$router.push(`/movie/${movieId}`);
-    }
-  }
+      this.$router.push(`/movie/${movieId}`)
+    },
+  },
 }
 </script>
 
@@ -240,4 +255,4 @@ export default {
   padding: 40px 0;
   text-align: center;
 }
-</style> 
+</style>

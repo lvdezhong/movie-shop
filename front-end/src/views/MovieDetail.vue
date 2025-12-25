@@ -7,7 +7,7 @@
           class="video-player"
           controls
           :src="videoUrl"
-          :poster="movieInfo.imgUrl"
+          :poster="getImageUrl(movieInfo.imgUrl)"
         >
           您的浏览器不支持 HTML5 视频播放
         </video>
@@ -46,19 +46,19 @@
                       score-template="{value}"
                     ></el-rate>
                   </div>
-                  <div class="rating-count">{{ movieInfo.ratingCount }}人评分</div>
+                  <div class="rating-count">
+                    {{ movieInfo.ratingCount }}人评分
+                  </div>
                 </div>
               </div>
-              <!-- <Rating 
+              <!-- <Rating
                 :movie="movieInfo"
                 @rating-updated="handleRatingUpdated"
               /> -->
-              <div class="movie-description">
-               简介： {{ movieInfo.remark }}
-              </div>
+              <div class="movie-description">简介： {{ movieInfo.remark }}</div>
             </div>
           </el-tab-pane>
-          
+
           <el-tab-pane label="评论区" name="comments">
             <div class="comments-section">
               <!-- 添加评论输入区域 -->
@@ -78,9 +78,9 @@
                     ></el-input>
                   </el-form-item>
                   <el-form-item>
-                    <el-button 
-                      type="primary" 
-                      @click="handleComment" 
+                    <el-button
+                      type="primary"
+                      @click="handleComment"
                       :loading="commenting"
                     >
                       发表评论
@@ -91,7 +91,11 @@
 
               <!-- 评论列表 -->
               <div class="comments-list">
-                <div v-for="(comment, index) in comments" :key="index" class="comment-item">
+                <div
+                  v-for="(comment, index) in comments"
+                  :key="index"
+                  class="comment-item"
+                >
                   <div class="comment-header">
                     <div class="comment-user-info">
                       <span class="comment-user">{{ comment.userName }}</span>
@@ -122,12 +126,13 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import Rating from '@/components/Rating.vue'
-import api from '@/utils/api';
+import api from '@/utils/api'
+import { getImageUrl } from '@/utils'
 
 export default {
   name: 'MovieDetail',
   components: {
-    Rating
+    Rating,
   },
   data() {
     return {
@@ -138,26 +143,28 @@ export default {
       comments: [],
       commentForm: {
         rating: 0,
-        commentsContent: ''
+        commentsContent: '',
       },
       rules: {
-        rating: [
-          { required: true, message: '请选择评分', trigger: 'change' }
-        ],
+        rating: [{ required: true, message: '请选择评分', trigger: 'change' }],
         commentsContent: [
           { required: true, message: '请输入评价内容', trigger: 'blur' },
-          { min: 5, max: 500, message: '评价内容长度在 5 到 500 个字符', trigger: 'blur' }
-        ]
+          {
+            min: 5,
+            max: 500,
+            message: '评价内容长度在 5 到 500 个字符',
+            trigger: 'blur',
+          },
+        ],
       },
-      isFavorite: false
+      isFavorite: false,
     }
   },
   computed: {
     ...mapState({
-      user: state => state.user,
-      favorites: state => state.favorites
+      user: (state) => state.user,
+      favorites: (state) => state.favorites,
     }),
-    
   },
   created() {
     this.fetchMovieDetail()
@@ -169,19 +176,29 @@ export default {
       'toggleFavorite',
       'addComment',
       'getComments',
-      'getFavorites'
+      'getFavorites',
     ]),
-
+    getImageUrl,
     async isFavoriteStatus() {
-      const response = await api.get('/movie/isFavorite?userId=' + this.user.userId + '&movieId=' + this.$route.params.id)
-      if(response.code === 200){
-          this.isFavorite = response.result.isFavorite!=0
+      const response = await api.get(
+        '/movie/isFavorite?userId=' +
+          this.user.userId +
+          '&movieId=' +
+          this.$route.params.id
+      )
+      if (response.code === 200) {
+        this.isFavorite = response.result.isFavorite != 0
       }
     },
 
     async fetchMovieDetail() {
       try {
-        const response = await api.get('/movie/detail?userId=' + this.user.userId + '&movieId=' + this.$route.params.id)
+        const response = await api.get(
+          '/movie/detail?userId=' +
+            this.user.userId +
+            '&movieId=' +
+            this.$route.params.id
+        )
         this.movieInfo = response.result.movie
       } catch (error) {
         this.$message.error('获取电影详情失败')
@@ -189,9 +206,11 @@ export default {
     },
     async fetchComments() {
       try {
-        const response = await api.get('/movie_comments/list?movieId=' + this.$route.params.id)
+        const response = await api.get(
+          '/movie_comments/list?movieId=' + this.$route.params.id
+        )
         // const response = await this.getComments(this.$route.params.id)
-        if(response.code === 200){
+        if (response.code === 200) {
           this.comments = response.result
         }
         // this.comments = response
@@ -218,16 +237,16 @@ export default {
         if (this.isFavorite) {
           url = '/movie_collet/delete'
         } else {
-          url = '/movie_collet/add';
+          url = '/movie_collet/add'
         }
         const response = await api.post(url, {
           movieId: this.$route.params.id,
-          userId: this.user.userId
+          userId: this.user.userId,
         })
-        if(response.code === 200){
+        if (response.code === 200) {
           this.$message.success(this.isFavorite ? '取消收藏成功' : '收藏成功')
           this.isFavorite = !this.isFavorite
-        }else{
+        } else {
           this.$message.error('操作失败')
         }
       } catch (error) {
@@ -244,13 +263,13 @@ export default {
               movieId: this.$route.params.id,
               userId: this.user.userId,
               commentsContent: this.commentForm.commentsContent,
-              score: this.commentForm.rating
+              score: this.commentForm.rating,
             })
             if (response.code === 200) {
               this.$message.success('评论发表成功')
               // 重置表单
-              this.commentForm.rating = 0;
-              this.commentForm.commentsContent = '';
+              this.commentForm.rating = 0
+              this.commentForm.commentsContent = ''
               this.fetchComments()
             } else {
               this.$message.error('评论发表失败')
@@ -261,7 +280,7 @@ export default {
             this.commenting = false
           }
         }
-      });
+      })
     },
     handlePlay() {
       if (!this.user) {
@@ -282,8 +301,8 @@ export default {
     },
     handleRatingUpdated() {
       this.fetchMovieDetail()
-    }
-  }
+    },
+  },
 }
 </script>
 
@@ -449,4 +468,4 @@ export default {
     min-height: auto;
   }
 }
-</style> 
+</style>

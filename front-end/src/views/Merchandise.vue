@@ -15,7 +15,11 @@
             @click.native="goToDetail(item.productId)"
           >
             <div class="image-container">
-              <img :src="item.productUrl" alt="商品图片" class="item-image" />
+              <img
+                :src="getImageUrl(item.productUrl)"
+                alt="商品图片"
+                class="item-image"
+              />
             </div>
             <div class="item-info">
               <h3>{{ item.productName }}</h3>
@@ -50,6 +54,7 @@
 <script>
 import api from '@/utils/api'
 import { mapState, mapGetters, mapActions } from 'vuex'
+import { getImageUrl } from '@/utils'
 
 export default {
   name: 'Merchandise',
@@ -68,6 +73,7 @@ export default {
     this.fetchMerchandiseList()
   },
   methods: {
+    getImageUrl,
     fetchMerchandiseList() {
       api
         .get('/product/list')

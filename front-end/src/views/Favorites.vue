@@ -1,12 +1,27 @@
 <template>
   <div class="favorites-container">
     <h2 class="page-title">我的收藏</h2>
-    
+
     <el-row :gutter="20">
-      <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="movie in favoriteMovies" :key="movie.movieId">
-        <el-card class="movie-card" @click.native="goToDetail(movie.movieId)" v-if="movie.movieId">
+      <el-col
+        :xs="24"
+        :sm="12"
+        :md="8"
+        :lg="6"
+        v-for="movie in favoriteMovies"
+        :key="movie.movieId"
+      >
+        <el-card
+          class="movie-card"
+          @click.native="goToDetail(movie.movieId)"
+          v-if="movie.movieId"
+        >
           <div class="image-container">
-            <img :src="`${config.imageBaseUrl}/${movie.imgUrl}`" :alt="movie.movieName" class="movie-image">
+            <img
+              :src="getImageUrl(movie.imgUrl)"
+              :alt="movie.movieName"
+              class="movie-image"
+            />
           </div>
           <div class="movie-info">
             <h3>{{ movie.movieName }}</h3>
@@ -14,9 +29,9 @@
               <span class="movie-year">{{ movie.year }}</span>
             </div>
             <p class="movie-desc">{{ movie.remark }}</p>
-            <el-button 
-              type="danger" 
-              icon="el-icon-delete" 
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
               circle
               @click.stop="handleRemoveFavorite(movie.movieId)"
             ></el-button>
@@ -26,9 +41,9 @@
           <div class="deleted-content">
             <i class="el-icon-delete"></i>
             <span class="deleted-text">电影已删除</span>
-            <el-button 
-              type="danger" 
-              icon="el-icon-delete" 
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
               circle
               @click.stop="handleRemoveFavorite(movie.collectId)"
               class="delete-btn"
@@ -48,25 +63,29 @@
 import api from '@/utils/api'
 import config from '@/config'
 import { mapGetters } from 'vuex'
+import { getImageUrl } from '@/utils'
 
 export default {
   name: 'Favorites',
   data() {
     return {
       favoriteMovies: [],
-      config
+      config,
     }
   },
   computed: {
-    ...mapGetters(['user'])
+    ...mapGetters(['user']),
   },
   created() {
     this.fetchFavorites()
   },
   methods: {
+    getImageUrl,
     async fetchFavorites() {
       try {
-        const response = await api.get(`/movie_collet/list?userId=${this.user.userId}`)
+        const response = await api.get(
+          `/movie_collet/list?userId=${this.user.userId}`
+        )
         if (response.code === 200) {
           this.favoriteMovies = response.result
         } else {
@@ -80,11 +99,13 @@ export default {
       try {
         const response = await api.post('/movie_collet/delete', {
           movieId: movieId,
-          userId: this.user.userId
+          userId: this.user.userId,
         })
         if (response.code === 200) {
           this.$message.success('取消收藏成功')
-          this.favoriteMovies = this.favoriteMovies.filter(movie => movie.movieId !== movieId)
+          this.favoriteMovies = this.favoriteMovies.filter(
+            (movie) => movie.movieId !== movieId
+          )
         } else {
           this.$message.error('操作失败')
         }
@@ -94,8 +115,8 @@ export default {
     },
     goToDetail(movieId) {
       this.$router.push(`/movie/${movieId}`)
-    }
-  }
+    },
+  },
 }
 </script>
 

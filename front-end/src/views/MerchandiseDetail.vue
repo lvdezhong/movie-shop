@@ -7,7 +7,7 @@
           <el-col :span="12">
             <div class="image-container">
               <img
-                :src="merchandise.productUrl"
+                :src="getImageUrl(merchandise.productUrl)"
                 :alt="merchandise.productName"
                 class="detail-image"
               />
@@ -100,6 +100,8 @@
 <script>
 import api from '@/utils/api'
 import { mapState, mapActions } from 'vuex'
+import { getImageUrl } from '@/utils'
+
 export default {
   name: 'MerchandiseDetail',
   data() {
@@ -133,6 +135,7 @@ export default {
     this.detail()
   },
   methods: {
+    getImageUrl,
     async detail() {
       try {
         const response = await api.get(

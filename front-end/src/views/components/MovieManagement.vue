@@ -104,7 +104,7 @@
           <el-upload
             class="upload-demo"
             drag
-            action="http://localhost:3000/upload"
+            :action="uploadBaseUrl"
             :limit="1"
             :headers="setToken()"
             :on-exceed="handleExceed"
@@ -131,8 +131,14 @@
 
 <script>
 import api from '@/utils/api'
+import { uploadBaseUrl } from '@/config'
+
 export default {
   props: {
+    movies: {
+      type: Array,
+      default: () => [],
+    },
     categories: {
       type: Array,
       default: () => [],
@@ -152,8 +158,12 @@ export default {
         remark: '',
         imgUrl: '',
       },
-      movies: [],
     }
+  },
+  computed: {
+    uploadBaseUrl() {
+      return uploadBaseUrl
+    },
   },
   methods: {
     openAddDialog() {

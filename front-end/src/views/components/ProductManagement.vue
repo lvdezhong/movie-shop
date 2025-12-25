@@ -12,7 +12,7 @@
       <el-table-column prop="productUrl" label="产品图片">
         <template slot-scope="scope">
           <el-image
-            :src="scope.row.productUrl"
+            :src="getImageUrl(scope.row.productUrl)"
             :preview-src-list="[scope.row.productUrl]"
             style="width: 60px; height: 60px"
           />
@@ -59,21 +59,19 @@
         <el-form-item label="产品图片">
           <el-upload
             class="upload-demo"
-            drag
-            action="http://localhost:3000/upload"
+            :action="uploadBaseUrl"
             :limit="1"
             :headers="setToken()"
             :on-exceed="handleExceed"
             :before-upload="beforeUpload"
             :on-success="handleSuccess"
           >
-            <i class="el-icon-upload"></i>
-            <div class="el-upload__text">
-              将文件拖到此处，或<em>点击上传</em>
-            </div>
-            <div class="el-upload__tip" slot="tip">
-              只能上传jpg/png文件，且不超过2MB
-            </div>
+            <img
+              width="60px"
+              v-if="productForm.productUrl"
+              :src="getImageUrl(productForm.productUrl)"
+            />
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
         <el-form-item label="价格">
@@ -84,9 +82,17 @@
         </el-form-item>
         <el-form-item label="关联电影">
           <el-select
-            v-model="productForm.productName"
-            placeholder="请输入产品名称"
-          />
+            v-model="productForm.movieId"
+            filterable
+            placeholder="请选择一个关联的电影"
+          >
+            <el-option
+              v-for="item in movies"
+              :key="item.movieId"
+              :label="item.movieName"
+              :value="item.movieId"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="描述">
           <el-input
@@ -107,9 +113,17 @@
 
 <script>
 import api from '@/utils/api'
+import { uploadBaseUrl } from '@/config'
+import { getImageUrl } from '@/utils'
 
 export default {
   typeName: 'ProductManagement',
+  props: {
+    movies: {
+      type: Array,
+      default: () => [],
+    },
+  },
   data() {
     return {
       loading: false,
@@ -120,14 +134,21 @@ export default {
         productName: '',
         outPrice: '',
         productUrl: '',
+        movieId: '',
         remark: '',
       },
     }
+  },
+  computed: {
+    uploadBaseUrl() {
+      return uploadBaseUrl
+    },
   },
   mounted() {
     this.getProducts()
   },
   methods: {
+    getImageUrl,
     setToken() {
       return { Authorization: 'Bearer ' + localStorage.getItem('token') || '' }
     },
@@ -169,6 +190,7 @@ export default {
           .post(`/product/update`, this.productForm)
           .then(() => {
             this.$message.success('产品更新成功')
+            this.getProducts()
           })
           .catch((error) => {
             console.error('更新产品失败:', error)

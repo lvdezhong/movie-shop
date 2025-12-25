@@ -161,8 +161,18 @@ router.post('/type/delete', async function (req, res) {
 router.get('/product/list', async function (req, res) {
   let param = req.query || req.params
   let resResult = { code: 200, reason: '成功' }
-  let sql =
-    'SELECT product_id AS productId,product_no AS productNo,product_name AS productName, out_price AS outPrice, CONCAT("http://localhost:3000/getFile/",product_url) AS productUrl,remark,rating,ratingCount FROM product'
+  let sql = `
+    SELECT
+      product_id AS productId,
+      product_no AS productNo,
+      product_name AS productName,
+      out_price AS outPrice,
+      product_url AS productUrl,
+      remark,
+      rating,
+      ratingCount
+    FROM product
+  `
   let result = await db.execQuery(sql, [])
   resResult.code = 200
   resResult.reason = '成功'
@@ -180,7 +190,7 @@ router.get('/product/detail', async function (req, res) {
       product_no AS productNo,
       product_name AS productName,
       out_price AS outPrice,
-      CONCAT("http://localhost:3000/getFile/",product_url) AS productUrl,
+      product_url AS productUrl,
       remark,
       IFNULL(rating, 0) AS rating,
       IFNULL(ratingCount, 0) AS ratingCount
@@ -206,6 +216,50 @@ router.get('/product/detail', async function (req, res) {
   resResult.code = 200
   resResult.reason = '成功'
   resResult.result = { ...result[0], comments: commentsResult }
+  res.json(resResult)
+})
+
+router.post('/product/update', async function (req, res) {
+  let param = req.body
+
+  let { productId, productName, outPrice, productUrl, movieId, remark } = param
+
+  let resResult = { code: 200, reason: '成功' }
+
+  // 校验必要参数
+  if (!productId) {
+    resResult.code = 201
+    resResult.reason = '请提供产品ID'
+    return res.json(resResult)
+  }
+
+  let sql = `
+    UPDATE product
+    SET product_name = ?,
+        out_price = ?,
+        product_url = ?,
+        movie_id = ?,
+        remark = ?
+    WHERE product_id = ?;
+  `
+
+  try {
+    await db.execQuery(sql, [
+      productName,
+      outPrice,
+      productUrl,
+      movieId,
+      remark,
+      productId,
+    ])
+
+    resResult.reason = '更新成功'
+  } catch (e) {
+    console.error('更新失败:', e)
+    resResult.code = 500
+    resResult.reason = '更新失败'
+  }
+
   res.json(resResult)
 })
 
@@ -648,7 +702,7 @@ router.get('/movie/list', async function (req, res) {
       starring AS starring,
       year AS year,
       remark AS remark,
-      CONCAT("http://localhost:3000/getFile/",img_url) AS imgUrl,
+      img_url AS imgUrl,
       state AS state,
       rating AS rating,
       ratingCount AS ratingCount
@@ -719,7 +773,7 @@ router.get('/movie/detail', async function (req, res) {
       starring AS starring,
       year AS year,
       remark AS remark,
-      CONCAT("http://localhost:3000/getFile/",img_url) AS imgUrl,
+      img_url AS imgUrl,
       state AS state,
       IFNULL(rating, 0) AS rating,
       IFNULL(ratingCount, 0) AS ratingCount
@@ -1251,7 +1305,7 @@ router.post('/upload', function (req, res) {
       code: 200,
       reason: '成功',
       result: {
-        path: path,
+        path,
       },
     })
   })

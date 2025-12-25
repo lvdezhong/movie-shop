@@ -9,7 +9,7 @@
         <!-- 影片管理 -->
         <el-tab-pane label="影片管理" name="movieManagement">
           <movie-management
-            ref="movieManagement"
+            :movies="movies"
             :categories="categories"
             @refresh-movies="getMovies"
           />
@@ -30,7 +30,7 @@
 
         <!-- 商品管理 -->
         <el-tab-pane label="商品管理" name="productManagement">
-          <product-management />
+          <product-management :movies="movies" />
         </el-tab-pane>
       </el-tabs>
     </el-main>
@@ -54,6 +54,7 @@ export default {
   data() {
     return {
       activeTab: 'movieManagement',
+      movies: [],
       categories: [],
     }
   },
@@ -75,7 +76,7 @@ export default {
     async getMovies() {
       try {
         const response = await api.get('/movie/list')
-        this.$refs.movieManagement.movies = response.result
+        this.movies = response.result
       } catch (error) {
         console.error('获取影片列表失败:', error)
         this.$message.error('获取影片列表失败')

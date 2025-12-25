@@ -1,9 +1,9 @@
 import axios from 'axios'
 import router from '@/router'
-import store from '@/store'
+import { baseUrl } from '@/config'
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: baseUrl,
   // timeout: 5000,
   // headers: {
   //   'Content-Type': 'application/json',
