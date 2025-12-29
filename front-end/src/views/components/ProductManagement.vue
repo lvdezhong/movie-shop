@@ -220,6 +220,7 @@ export default {
           .post('/product/add', this.productForm)
           .then(() => {
             this.$message.success('产品添加成功')
+            this.getProducts()
           })
           .catch((error) => {
             console.error('添加产品失败:', error)
@@ -239,6 +240,7 @@ export default {
             .post(`/product/delete`, { productId })
             .then(() => {
               this.$message.success('删除成功')
+              this.getProducts()
             })
             .catch((error) => {
               console.error('删除产品失败:', error)

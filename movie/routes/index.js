@@ -250,6 +250,36 @@ router.post('/product/add', async function (req, res) {
   res.json(resResult)
 })
 
+router.post('/product/delete', async function (req, res) {
+  let param = req.body
+  let productId = param.productId
+
+  let resResult = { code: 200, reason: '成功' }
+
+  // 校验必要参数
+  if (!productId || productId <= 0) {
+    resResult.code = 201
+    resResult.reason = '请选择要删除的产品'
+    return res.json(resResult)
+  }
+
+  let sql = 'DELETE FROM product WHERE product_id = ?'
+  let sql2 = 'DELETE FROM product_comments WHERE product_id = ?'
+
+  try {
+    await db.execQuery(sql, [productId])
+    await db.execQuery(sql2, [productId])
+
+    resResult.reason = '删除成功'
+  } catch (e) {
+    console.error('删除失败:', e)
+    resResult.code = 500
+    resResult.reason = '删除失败'
+  }
+
+  res.json(resResult)
+})
+
 router.post('/product/update', async function (req, res) {
   let param = req.body
 
