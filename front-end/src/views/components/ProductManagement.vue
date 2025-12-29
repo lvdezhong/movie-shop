@@ -13,7 +13,7 @@
         <template slot-scope="scope">
           <el-image
             :src="getImageUrl(scope.row.productUrl)"
-            :preview-src-list="[scope.row.productUrl]"
+            :preview-src-list="[getImageUrl(scope.row.productUrl)]"
             style="width: 60px; height: 60px"
           />
         </template>
@@ -43,11 +43,11 @@
 
     <!-- 添加/编辑产品对话框 -->
     <el-dialog
+      class="product-dialog"
       :title="isEditing ? '编辑产品' : '添加产品'"
       :visible.sync="dialogVisible"
       width="40%"
       :close-on-click-modal="false"
-      class="product-dialog"
     >
       <el-form :model="productForm" label-width="80px" class="product-form">
         <el-form-item label="产品名称">
@@ -56,22 +56,28 @@
             placeholder="请输入产品名称"
           />
         </el-form-item>
+        <el-form-item label="产品编号">
+          <el-input
+            v-model="productForm.productNo"
+            placeholder="请输入产品编号"
+          />
+        </el-form-item>
         <el-form-item label="产品图片">
           <el-upload
-            class="upload-demo"
+            :file-list="fileList"
+            list-type="picture"
             :action="uploadBaseUrl"
             :limit="1"
             :headers="setToken()"
             :on-exceed="handleExceed"
             :before-upload="beforeUpload"
             :on-success="handleSuccess"
+            :on-remove="handleRemove"
           >
-            <img
-              width="60px"
-              v-if="productForm.productUrl"
-              :src="getImageUrl(productForm.productUrl)"
-            />
-            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            <i
+              v-if="fileList.length === 0"
+              class="el-icon-plus avatar-uploader-icon"
+            ></i>
           </el-upload>
         </el-form-item>
         <el-form-item label="价格">
@@ -132,6 +138,7 @@ export default {
       products: [],
       productForm: {
         productName: '',
+        productNo: '',
         outPrice: '',
         productUrl: '',
         movieId: '',
@@ -142,6 +149,16 @@ export default {
   computed: {
     uploadBaseUrl() {
       return uploadBaseUrl
+    },
+    fileList() {
+      return this.productForm.productUrl
+        ? [
+            {
+              name: 'product-image',
+              url: this.getImageUrl(this.productForm.productUrl),
+            },
+          ]
+        : []
     },
   },
   mounted() {
@@ -174,6 +191,7 @@ export default {
         productName: '',
         outPrice: '',
         productUrl: '',
+        movieId: '',
         remark: '',
       }
       this.dialogVisible = true
@@ -234,6 +252,9 @@ export default {
     handleExceed(files, fileList) {
       this.$message.warning('只能上传一个文件')
     },
+    handleRemove(file, fileList) {
+      this.productForm.productUrl = ''
+    },
     beforeUpload(file) {
       const isJPG = file.type === 'image/jpeg'
       const isPNG = file.type === 'image/png'
@@ -270,6 +291,15 @@ export default {
 .product-form {
   .el-form-item {
     margin-bottom: 22px;
+  }
+
+  :deep(.el-upload) {
+    display: block;
+    text-align: left;
+  }
+
+  :deep(.el-upload-list__item) {
+    transition: none;
   }
 }
 </style>

@@ -168,6 +168,7 @@ router.get('/product/list', async function (req, res) {
       product_name AS productName,
       out_price AS outPrice,
       product_url AS productUrl,
+      movie_id AS movieId,
       remark,
       rating,
       ratingCount
@@ -219,10 +220,48 @@ router.get('/product/detail', async function (req, res) {
   res.json(resResult)
 })
 
+router.post('/product/add', async function (req, res) {
+  let param = req.body
+  let { productName, productNo, outPrice, productUrl, movieId, remark } = param
+
+  let resResult = { code: 200, reason: '成功' }
+
+  let sql = `
+    INSERT INTO product
+      (product_name, product_no, out_price, product_url, movie_id, remark)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `
+
+  try {
+    await db.execQuery(sql, [
+      productName,
+      productNo,
+      outPrice,
+      productUrl,
+      movieId,
+      remark,
+    ])
+  } catch (e) {
+    console.error('插入失败:', e)
+    resResult.code = 500
+    resResult.reason = '插入失败'
+  }
+
+  res.json(resResult)
+})
+
 router.post('/product/update', async function (req, res) {
   let param = req.body
 
-  let { productId, productName, outPrice, productUrl, movieId, remark } = param
+  let {
+    productId,
+    productName,
+    productNo,
+    outPrice,
+    productUrl,
+    movieId,
+    remark,
+  } = param
 
   let resResult = { code: 200, reason: '成功' }
 
@@ -236,6 +275,7 @@ router.post('/product/update', async function (req, res) {
   let sql = `
     UPDATE product
     SET product_name = ?,
+        product_no = ?,
         out_price = ?,
         product_url = ?,
         movie_id = ?,
@@ -246,6 +286,7 @@ router.post('/product/update', async function (req, res) {
   try {
     await db.execQuery(sql, [
       productName,
+      productNo,
       outPrice,
       productUrl,
       movieId,
