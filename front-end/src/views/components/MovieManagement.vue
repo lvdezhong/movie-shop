@@ -102,6 +102,23 @@
         </el-form-item>
         <el-form-item label="封面">
           <el-upload
+            :file-list="fileList"
+            list-type="picture"
+            :action="uploadBaseUrl"
+            :limit="1"
+            :headers="setToken()"
+            :on-exceed="handleExceed"
+            :before-upload="beforeUpload"
+            :on-success="handleSuccess"
+            :on-remove="handleRemove"
+          >
+            <i
+              v-if="fileList.length === 0"
+              class="el-icon-plus avatar-uploader-icon"
+            ></i>
+          </el-upload>
+
+          <!-- <el-upload
             class="upload-demo"
             drag
             :action="uploadBaseUrl"
@@ -118,7 +135,7 @@
             <div class="el-upload__tip" slot="tip">
               只能上传jpg/png文件，且不超过2MB
             </div>
-          </el-upload>
+          </el-upload> -->
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -132,6 +149,7 @@
 <script>
 import api from '@/utils/api'
 import { uploadBaseUrl } from '@/config'
+import { getImageUrl } from '@/utils'
 
 export default {
   props: {
@@ -164,8 +182,19 @@ export default {
     uploadBaseUrl() {
       return uploadBaseUrl
     },
+    fileList() {
+      return this.movieForm.imgUrl
+        ? [
+            {
+              name: 'movie-image',
+              url: this.getImageUrl(this.movieForm.imgUrl),
+            },
+          ]
+        : []
+    },
   },
   methods: {
+    getImageUrl,
     openAddDialog() {
       this.isEditing = false
       this.movieForm = {
@@ -243,6 +272,9 @@ export default {
     handleExceed(files, fileList) {
       this.$message.warning('只能上传一个文件')
     },
+    handleRemove(file, fileList) {
+      this.movieForm.imgUrl = ''
+    },
     beforeUpload(file) {
       const isJPG = file.type === 'image/jpeg'
       const isPNG = file.type === 'image/png'
@@ -282,24 +314,13 @@ export default {
     margin-bottom: 22px;
   }
 
-  .el-upload {
-    width: 100%;
+  :deep(.el-upload) {
+    display: block;
+    text-align: left;
   }
 
-  .el-upload-dragger {
-    width: 100%;
-  }
-}
-
-.upload-demo {
-  .el-upload-dragger {
-    width: 100%;
-    height: 180px;
-  }
-
-  .el-upload__tip {
-    line-height: 1.2;
-    padding-top: 8px;
+  :deep(.el-upload-list__item) {
+    transition: none;
   }
 }
 </style>
