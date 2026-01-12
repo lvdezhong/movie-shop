@@ -160,6 +160,7 @@ router.post('/type/delete', async function (req, res) {
 //商品管理
 router.get('/product/list', async function (req, res) {
   let param = req.query || req.params
+  let movieId = param.movieId
   let resResult = { code: 200, reason: '成功' }
   let sql = `
     SELECT
@@ -174,7 +175,12 @@ router.get('/product/list', async function (req, res) {
       ratingCount
     FROM product
   `
-  let result = await db.execQuery(sql, [])
+  let args = []
+  if (movieId) {
+    sql += ' WHERE movie_id = ?'
+    args.push(movieId)
+  }
+  let result = await db.execQuery(sql, args)
   resResult.code = 200
   resResult.reason = '成功'
   resResult.result = result
@@ -205,7 +211,7 @@ router.get('/product/detail', async function (req, res) {
       pc.product_id AS productId,
       pc.comments_content AS commentsContent,
       pc.rating AS rating,
-      pc.comments_time AS commentsTime,
+      DATE_FORMAT(pc.comments_time, '%Y-%m-%d %H:%i:%s') AS commentsTime,
       pc.state AS state,
       u.user_name AS userName
     FROM product_comments pc

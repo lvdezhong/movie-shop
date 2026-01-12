@@ -15,10 +15,10 @@
 
       <!-- 信息展示区 -->
       <div class="info-section">
-        <el-tabs v-model="activeTab" class="movie-tabs">
-          <el-tab-pane label="电影详情" name="detail">
+        <el-tabs v-model="activeTab">
+          <el-tab-pane class="tab-pane" label="电影详情" name="detail">
             <div class="movie-info">
-              <h2 class="movie-title">
+              <div class="movie-title">
                 {{ movieInfo.movieName }}
                 <el-button
                   :type="isFavorite ? 'danger' : 'default'"
@@ -27,14 +27,14 @@
                   @click="handleFavorite"
                   class="favorite-btn"
                 ></el-button>
-              </h2>
+              </div>
               <div class="movie-meta">
                 <span>导演：{{ movieInfo.director }}</span>
                 <span>主演：{{ movieInfo.starring }}</span>
                 <span>年份：{{ movieInfo.year }}</span>
               </div>
               <div class="rating-header">
-                <h3>用户评分</h3>
+                <div class="rating-title">用户评分</div>
                 <div class="rating-stats">
                   <div class="average-rating">
                     <!-- <span class="rating-value">{{ movieInfo.rating }}</span> -->
@@ -59,16 +59,17 @@
             </div>
           </el-tab-pane>
 
-          <el-tab-pane label="评论区" name="comments">
+          <el-tab-pane class="tab-pane" label="评论区" name="comments">
             <div class="comments-section">
               <!-- 添加评论输入区域 -->
               <div class="comment-form">
                 <el-form :model="commentForm" :rules="rules" ref="commentForm">
                   <el-form-item label="评分" prop="rating">
-                    <el-rate v-model="commentForm.rating"></el-rate>
+                    <el-rate class="comment-rating"v-model="commentForm.rating"></el-rate>
                   </el-form-item>
                   <el-form-item label="评价内容" prop="content">
                     <el-input
+                      class="comment-input"
                       type="textarea"
                       v-model="commentForm.commentsContent"
                       :rows="4"
@@ -77,15 +78,13 @@
                       show-word-limit
                     ></el-input>
                   </el-form-item>
-                  <el-form-item>
-                    <el-button
-                      type="primary"
-                      @click="handleComment"
-                      :loading="commenting"
-                    >
-                      发表评论
-                    </el-button>
-                  </el-form-item>
+                  <el-button
+                    type="primary"
+                    @click="handleComment"
+                    :loading="commenting"
+                  >
+                    发表评论
+                  </el-button>
                 </el-form>
               </div>
 
@@ -98,7 +97,7 @@
                 >
                   <div class="comment-header">
                     <div class="comment-user-info">
-                      <span class="comment-user">{{ comment.userName }}</span>
+                      <span class="comment-user">{{ comment.userName || '匿名' }}</span>
                       <el-rate
                         v-model="comment.score"
                         disabled
@@ -119,6 +118,57 @@
           </el-tab-pane>
         </el-tabs>
       </div>
+    </div>
+    <el-divider />
+    <div class="product-list">
+      <h2>周边推荐</h2>
+      <el-empty v-if="merchandiseList.length === 0" description="暂无相关周边哦～"></el-empty>
+      <el-row v-else :gutter="20">
+        <el-col
+          v-for="item in merchandiseList"
+          :key="item.id"
+          :xs="24"
+          :sm="12"
+          :md="8"
+          :lg="6"
+        >
+          <el-card
+            class="merchandise-item"
+            @click.native="goToDetail(item.productId)"
+          >
+            <div class="image-container">
+              <img
+                :src="getImageUrl(item.productUrl)"
+                alt="商品图片"
+                class="item-image"
+              />
+            </div>
+            <div class="item-info">
+              <h3>{{ item.productName }}</h3>
+              <p class="description">{{ item.remark }}</p>
+              <div class="rating-container">
+                <el-rate
+                  v-model="item.rating"
+                  disabled
+                  show-score
+                  text-color="#ff9900"
+                  score-template="{value}"
+                ></el-rate>
+                <span class="rating-count">({{ item.ratingCount }}人评价)</span>
+              </div>
+              <p class="price">¥{{ item.outPrice }}</p>
+              <el-button
+                type="primary"
+                @click.stop="addToCart(item)"
+                icon="el-icon-shopping-cart-full"
+                v-if="user && user.status != '1'"
+              >
+                加入购物车
+              </el-button>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
   </div>
 </template>
@@ -158,6 +208,7 @@ export default {
         ],
       },
       isFavorite: false,
+      merchandiseList: [],
     }
   },
   computed: {
@@ -170,6 +221,7 @@ export default {
     this.fetchMovieDetail()
     this.fetchComments()
     this.isFavoriteStatus()
+    this.fetchMerchandiseList()
   },
   methods: {
     ...mapActions([
@@ -302,6 +354,33 @@ export default {
     handleRatingUpdated() {
       this.fetchMovieDetail()
     },
+    fetchMerchandiseList() {
+      api
+        .get('/product/list?movieId=' + this.$route.params.id)
+        .then((response) => {
+          this.merchandiseList = response.result
+        })
+        .catch((error) => {
+          console.error('获取商品列表失败:', error)
+          this.$message.error('获取商品列表失败')
+        })
+    },
+    async addToCart(item) {
+      const response = await api.post('/shopping_cart/add', {
+        productId: item.productId,
+        productNum: 1,
+        outPrice: item.outPrice,
+        userId: this.user.userId,
+      })
+      if (response.code === 200) {
+        this.$message.success('已加入购物车')
+      } else {
+        this.$message.error('操作失败')
+      }
+    },
+    goToDetail(id) {
+      this.$router.push(`/merchandise/${id}`)
+    },
   },
 }
 </script>
@@ -316,6 +395,7 @@ export default {
 .content-wrapper {
   display: flex;
   gap: 20px;
+  height: calc(100vh - 100px);
 }
 
 .video-section {
@@ -325,7 +405,7 @@ export default {
 
 .video-player {
   width: 100%;
-  height: calc(100vh - 100px);
+  height: 100%;
   max-height: 800px;
   min-height: 500px;
   background: #000;
@@ -347,18 +427,20 @@ export default {
   max-width: 400px;
 }
 
-.movie-tabs {
-  height: 100%;
+.tab-pane {
+  height: 669px;
 }
 
 .movie-info {
-  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
 }
 
 .movie-title {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 15px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -368,35 +450,46 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 20px;
   color: #666;
 }
 
+.rating-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
 .movie-description {
-  margin-top: 20px;
   line-height: 1.6;
   color: #333;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .comments-section {
-  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
 }
 
 .comment-form {
-  margin-bottom: 30px;
   background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
-}
 
-.comment-form-footer {
-  margin-top: 15px;
-  display: flex;
-  justify-content: flex-end;
+  .comment-rating {
+    margin-top: 10px;
+  }
+
+  .comment-input {
+    line-height: 1.6;
+  }
 }
 
 .comments-list {
-  margin-top: 20px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .comment-item {
@@ -412,7 +505,6 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
 }
 
 .comment-user-info {
@@ -450,10 +542,69 @@ export default {
   transform: scale(1.1);
 }
 
+.merchandise-item {
+  margin-bottom: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.merchandise-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+.image-container {
+  width: 100%;
+  padding-top: 100%; /* 保持1:1比例 */
+  position: relative;
+}
+
+.item-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-info {
+  padding: 10px;
+  text-align: center;
+}
+
+.description {
+  color: #666;
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.rating-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.rating-count {
+  margin-left: 8px;
+  color: #666;
+  font-size: 12px;
+}
+
+.price {
+  color: #f56c6c;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
 /* 响应式布局 */
 @media screen and (max-width: 768px) {
   .content-wrapper {
     flex-direction: column;
+    height: auto;
   }
 
   .video-section,
@@ -466,6 +617,10 @@ export default {
     height: auto;
     max-height: 400px;
     min-height: auto;
+  }
+
+  .tab-pane {
+    height: auto;
   }
 }
 </style>
