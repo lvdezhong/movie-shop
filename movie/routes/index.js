@@ -750,11 +750,15 @@ router.get('/movie/list', async function (req, res) {
   let pageNo = param.pageNo
   let pageSize = param.pageSize
   let typeId = param.typeId
+  let movieName = param.movieName
   let offset = (pageNo - 1) * pageSize
   let resResult = { code: 200, reason: '成功' }
 
   // 构建缓存键
   let cacheKey = typeId ? `movie:list:type:${typeId}` : 'movie:list:all'
+  if (movieName) {
+    cacheKey = `movie:list:name:${movieName}:${typeId || 'all'}`
+  }
 
   // 尝试从缓存获取数据
   try {
@@ -789,6 +793,11 @@ router.get('/movie/list', async function (req, res) {
   if (typeId != null && typeId != '') {
     sql = sql + ' and type_id = ?'
     args.push(typeId)
+  }
+
+  if (movieName) {
+    sql = sql + ' and movie_name like ?'
+    args.push('%' + movieName + '%')
   }
 
   try {
