@@ -24,7 +24,7 @@
         </el-tab-pane>
 
         <!-- 影片审核 -->
-        <el-tab-pane label="影片审核" name="movieReview">
+        <el-tab-pane label="影评审核" name="movieReview">
           <movie-review />
         </el-tab-pane>
 
