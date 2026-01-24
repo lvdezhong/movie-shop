@@ -20,14 +20,14 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2024 影视商城. All rights reserved.</p>
+      <p>&copy; 2026 影视商城. All rights reserved.</p>
     </div>
   </footer>
 </template>
 
 <script>
 export default {
-  name: 'NavFooter'
+  name: 'NavFooter',
 }
 </script>
 
@@ -79,4 +79,4 @@ export default {
   padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-</style> 
+</style>
