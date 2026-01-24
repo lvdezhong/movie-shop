@@ -21,6 +21,9 @@
       <el-table-column prop="outPrice" label="价格">
         <template slot-scope="scope">¥ {{ scope.row.outPrice }}</template>
       </el-table-column>
+      <el-table-column prop="num" label="库存">
+        <template slot-scope="scope">{{ scope.row.num }}</template>
+      </el-table-column>
       <el-table-column label="操作" width="150">
         <template slot-scope="scope">
           <el-button
@@ -86,6 +89,12 @@
             placeholder="请输入产品价格"
           />
         </el-form-item>
+        <el-form-item label="库存">
+          <el-input-number
+            v-model="productForm.num"
+            placeholder="请输入库存数量"
+          />
+        </el-form-item>
         <el-form-item label="关联电影">
           <el-select
             v-model="productForm.movieId"
@@ -143,6 +152,7 @@ export default {
         productUrl: '',
         movieId: '',
         remark: '',
+        num: 0,
       },
     }
   },

@@ -171,6 +171,7 @@ router.get('/product/list', async function (req, res) {
       product_url AS productUrl,
       movie_id AS movieId,
       remark,
+      num,
       rating,
       ratingCount
     FROM product
@@ -199,6 +200,7 @@ router.get('/product/detail', async function (req, res) {
       out_price AS outPrice,
       product_url AS productUrl,
       remark,
+      num,
       IFNULL(rating, 0) AS rating,
       IFNULL(ratingCount, 0) AS ratingCount
     FROM product
@@ -228,14 +230,15 @@ router.get('/product/detail', async function (req, res) {
 
 router.post('/product/add', async function (req, res) {
   let param = req.body
-  let { productName, productNo, outPrice, productUrl, movieId, remark } = param
+  let { productName, productNo, outPrice, productUrl, movieId, remark, num } =
+    param
 
   let resResult = { code: 200, reason: '成功' }
 
   let sql = `
     INSERT INTO product
-      (product_name, product_no, out_price, product_url, movie_id, remark)
-    VALUES (?, ?, ?, ?, ?, ?)
+      (product_name, product_no, out_price, product_url, movie_id, remark, num)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `
 
   try {
@@ -246,6 +249,7 @@ router.post('/product/add', async function (req, res) {
       productUrl,
       movieId,
       remark,
+      num,
     ])
   } catch (e) {
     console.error('插入失败:', e)
@@ -297,6 +301,7 @@ router.post('/product/update', async function (req, res) {
     productUrl,
     movieId,
     remark,
+    num,
   } = param
 
   let resResult = { code: 200, reason: '成功' }
@@ -308,27 +313,43 @@ router.post('/product/update', async function (req, res) {
     return res.json(resResult)
   }
 
-  let sql = `
-    UPDATE product
-    SET product_name = ?,
-        product_no = ?,
-        out_price = ?,
-        product_url = ?,
-        movie_id = ?,
-        remark = ?
-    WHERE product_id = ?;
-  `
+  let updateFields = []
+  let updateValues = []
+
+  if (productName !== undefined) {
+    updateFields.push('product_name = ?')
+    updateValues.push(productName)
+  }
+  if (productNo !== undefined) {
+    updateFields.push('product_no = ?')
+    updateValues.push(productNo)
+  }
+  if (outPrice !== undefined) {
+    updateFields.push('out_price = ?')
+    updateValues.push(outPrice)
+  }
+  if (productUrl !== undefined) {
+    updateFields.push('product_url = ?')
+    updateValues.push(productUrl)
+  }
+  if (movieId !== undefined) {
+    updateFields.push('movie_id = ?')
+    updateValues.push(movieId)
+  }
+  if (remark !== undefined) {
+    updateFields.push('remark = ?')
+    updateValues.push(remark)
+  }
+  if (num !== undefined) {
+    updateFields.push('num = ?')
+    updateValues.push(num)
+  }
+
+  updateValues.push(productId)
+  let sql = `UPDATE product SET ${updateFields.join(', ')} WHERE product_id = ?;`
 
   try {
-    await db.execQuery(sql, [
-      productName,
-      productNo,
-      outPrice,
-      productUrl,
-      movieId,
-      remark,
-      productId,
-    ])
+    await db.execQuery(sql, updateValues)
 
     resResult.reason = '更新成功'
   } catch (e) {
@@ -646,6 +667,26 @@ router.post('/order/add', async function (req, res) {
   if (proudctList.length == 0 || userId == '') {
     return res.json({ code: 201, reason: '信息缺失' })
   }
+
+  // 检查库存是否充足
+  for (let i = 0; i < proudctList.length; i++) {
+    let item = proudctList[i]
+    let productSql = 'SELECT num FROM product WHERE product_id = ?'
+    let productResult = await db.execQuery(productSql, [item.productId])
+
+    if (productResult.length === 0) {
+      resResult.code = 500
+      resResult.reason = `商品不存在: ${item.productName}`
+      return res.json(resResult)
+    }
+
+    if (productResult[0].num < item.productNum) {
+      resResult.code = 500
+      resResult.reason = `商品 "${item.productName}" 库存不足，当前库存: ${productResult[0].num}，您要购买: ${item.productNum}`
+      return res.json(resResult)
+    }
+  }
+
   let orderNo = generateOrderNumber()
   let total = 0
   let totalNum = 0
@@ -660,7 +701,7 @@ router.post('/order/add', async function (req, res) {
     detailSql += `('${orderNo}',${item.productId},${item.productNum},'${
       item.productName
     }',${item.outPrice},${(item.outPrice * item.productNum).toFixed(
-      2
+      2,
     )},${userId}),`
   }
   remark = remark.substring(0, remark.length - 1)
@@ -672,6 +713,9 @@ router.post('/order/add', async function (req, res) {
   `
 
   try {
+    // 开始事务
+    await db.execQuery('START TRANSACTION', [])
+
     let result = await db.execQuery(sql, [
       orderNo,
       userId,
@@ -681,13 +725,26 @@ router.post('/order/add', async function (req, res) {
     ])
     await db.execQuery(detailSql, [])
 
+    // 减少库存
+    for (let i = 0; i < proudctList.length; i++) {
+      let item = proudctList[i]
+      let updateStockSql =
+        'UPDATE product SET num = num - ? WHERE product_id = ?'
+      await db.execQuery(updateStockSql, [item.productNum, item.productId])
+    }
+
     // 清除购物车
     let clearCartSql = 'DELETE FROM shopping_cart WHERE user_id = ?'
     await db.execQuery(clearCartSql, [userId])
 
+    // 提交事务
+    await db.execQuery('COMMIT', [])
+
     res.json(resResult)
   } catch (e) {
     console.error('添加失败:', e)
+    // 回滚事务
+    await db.execQuery('ROLLBACK', [])
     resResult.code = 500
     resResult.reason = '添加失败'
     res.json(resResult)

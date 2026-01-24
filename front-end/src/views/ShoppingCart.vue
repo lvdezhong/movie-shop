@@ -5,27 +5,16 @@
         <div slot="header" class="clearfix">
           <h1>我的购物车</h1>
         </div>
-        
-        <el-table
-          :data="cartItems"
-          empty-text="购物车为空"
-          style="width: 100%">
-          <el-table-column
-            prop="productName"
-            label="商品名称"
-            >
+
+        <el-table :data="cartItems" empty-text="购物车为空" style="width: 100%">
+          <el-table-column prop="productName" label="商品名称">
           </el-table-column>
-          <el-table-column
-            prop="outPrice"
-            label="单价"
-            >
+          <el-table-column prop="outPrice" label="单价">
             <template slot-scope="scope">
               ¥{{ scope.row.outPrice.toFixed(2) }}
             </template>
           </el-table-column>
-          <el-table-column
-            label="数量"
-            >
+          <el-table-column label="数量">
             <template slot-scope="scope">
               <el-input-number
                 v-model="scope.row.productNum"
@@ -35,16 +24,12 @@
               ></el-input-number>
             </template>
           </el-table-column>
-          <el-table-column
-            label="小计"
-            >
+          <el-table-column label="小计">
             <template slot-scope="scope">
               ¥{{ scope.row.subtotal.toFixed(2) }}
             </template>
           </el-table-column>
-          <el-table-column
-            label="操作"
-            width="150">
+          <el-table-column label="操作" width="150">
             <template slot-scope="scope">
               <el-button
                 type="danger"
@@ -83,100 +68,114 @@
 </template>
 
 <script>
-import { mapGetters,mapState } from 'vuex';
-import api from '@/utils/api';
+import { mapGetters, mapState } from 'vuex'
+import api from '@/utils/api'
 
 export default {
   data() {
     return {
-      cartItems: []
+      cartItems: [],
     }
   },
   computed: {
     // ...mapGetters(['cartItems', 'cartItemCount', 'cartTotal']),
     ...mapState({
-      user: state => state.user,
-      favorites: state => state.favorites
+      user: (state) => state.user,
+      favorites: (state) => state.favorites,
     }),
     cartItemCount() {
-      let total = 0;
-      this.cartItems.forEach(item => {
-        total += item.productNum;
+      let total = 0
+      this.cartItems.forEach((item) => {
+        total += item.productNum
       })
-      return total;
+      return total
     },
     cartTotal() {
-      let total = 0;
-      this.cartItems.forEach(item => {
-        total += item.outPrice*item.productNum;
+      let total = 0
+      this.cartItems.forEach((item) => {
+        total += item.outPrice * item.productNum
       })
-      return total;
+      return total
     },
   },
   mounted() {
-    this.fetchShoppingCarList();
+    this.fetchShoppingCarList()
   },
-  
+
   methods: {
     fetchShoppingCarList() {
-      api.get('/shopping_cart/list?userId=' + this.user.userId).then(response => {
-        this.cartItems = response.result;
-        
-      }).catch(error => {
-        console.error('获取商品列表失败:', error);
-        this.$message.error('获取商品列表失败');
-      });
+      api
+        .get('/shopping_cart/list?userId=' + this.user.userId)
+        .then((response) => {
+          this.cartItems = response.result
+        })
+        .catch((error) => {
+          console.error('获取商品列表失败:', error)
+          this.$message.error('获取商品列表失败')
+        })
     },
     updateQuantity(item) {
       item.subtotal = item.productNum * item.outPrice
- 
     },
     removeItem(id) {
-      api.post('/shopping_cart/delete',{id}).then(response => {
-        this.$message.success('删除成功');
-        this.fetchShoppingCarList();
-      }).catch(error => {
-        console.error('获取商品列表失败:', error);
-        this.$message.error('获取商品列表失败');
-      });
+      api
+        .post('/shopping_cart/delete', { id })
+        .then((response) => {
+          this.$message.success('删除成功')
+          this.fetchShoppingCarList()
+        })
+        .catch((error) => {
+          console.error('获取商品列表失败:', error)
+          this.$message.error('获取商品列表失败')
+        })
     },
     async checkout() {
       this.$confirm('确认生成订单并前往支付吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
-      }).then(async () => {
-        // 模拟生成订单
-        // const newOrder = {
-        //   id: Date.now(),
-        //   orderNumber: `ORD${Date.now()}`,
-        //   date: new Date().toISOString(),
-        //   total: this.cartTotal,
-        //   status: '待处理',
-        //   items: this.cartItems,
-        //   paymentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24小时支付期限
-        // };
+        type: 'warning',
+      })
+        .then(async () => {
+          // 检查库存
+          for (let item of this.cartItems) {
+            // 获取商品详细信息以检查库存
+            const productResponse = await api.get(
+              `/product/detail?productId=${item.productId}`,
+            )
+            if (productResponse.code === 200) {
+              const product = productResponse.result
+              if (product.num < item.productNum) {
+                this.$message.error(
+                  `商品 "${product.productName}" 库存不足，当前库存: ${product.num}，您要购买: ${item.productNum}`,
+                )
+                return // 直接返回，不进行后续操作
+              }
+            } else {
+              this.$message.error(`获取商品 "${item.productName}" 信息失败`)
+              return
+            }
+          }
 
-        // 将订单添加到订单列表
-        //this.$store.dispatch('addOrder', newOrder);
-        const response = await api.post('/order/add', {
-          proudctList: this.cartItems,
-          userId: this.user.userId
+          // 如果库存充足，创建订单
+          const response = await api.post('/order/add', {
+            proudctList: this.cartItems,
+            userId: this.user.userId,
+          })
+
+          if (response.code === 200) {
+            this.$message.success('订单已生成，请尽快支付！')
+
+            // 跳转到订单页面
+            this.$router.push('/orders')
+          } else {
+            this.$message.error('订单生成失败')
+          }
         })
-        if (response.code === 200) {
-          this.$message.success('订单已生成，请尽快支付！')
-          // 跳转到订单页面
-          this.$router.push('/orders');
-        } else {
-          this.$message.error('订单生成失败')
-        }
-        
-        
-      }).catch(() => {
-        this.$message.info('已取消结算');
-      });
-    }
-  }
+        .catch(() => {
+          this.$message.info('已取消结算')
+        })
+    },
+  },
 }
 </script>
 
@@ -217,4 +216,4 @@ h1 {
   margin: 0;
   font-size: 24px;
 }
-</style> 
+</style>
